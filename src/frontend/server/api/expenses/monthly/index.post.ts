@@ -1,12 +1,12 @@
 import prisma from '~/server/utils/prisma'
 import { requireAuth } from '~/server/utils/jwt'
-import { transactionSchema } from '~/server/utils/validation'
+import { expenseSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = requireAuth(event)
   const body = await readBody(event)
   
-  const result = transactionSchema.safeParse(body)
+  const result = expenseSchema.safeParse(body)
   if (!result.success) {
     throw createError({
       statusCode: 400,

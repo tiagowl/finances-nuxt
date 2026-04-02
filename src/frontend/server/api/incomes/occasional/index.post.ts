@@ -1,12 +1,12 @@
 import prisma from '~/server/utils/prisma'
 import { requireAuth } from '~/server/utils/jwt'
-import { occasionalTransactionSchema } from '~/server/utils/validation'
+import { occasionalIncomeSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = requireAuth(event)
   const body = await readBody(event)
   
-  const result = occasionalTransactionSchema.safeParse(body)
+  const result = occasionalIncomeSchema.safeParse(body)
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -17,15 +17,17 @@ export default defineEventHandler(async (event) => {
 
   const { name, price, day, month, year, categoryId } = result.data
 
-  const category = await prisma.category.findFirst({
-    where: { id: categoryId, userId: user.userId }
-  })
-
-  if (!category) {
-    throw createError({
-      statusCode: 400,
-      message: 'Categoria não encontrada'
+  if (categoryId) {
+    const category = await prisma.category.findFirst({
+      where: { id: categoryId, userId: user.userId }
     })
+
+    if (!category) {
+      throw createError({
+        statusCode: 400,
+        message: 'Categoria não encontrada'
+      })
+    }
   }
 
   const income = await prisma.occasionalIncome.create({
@@ -35,7 +37,7 @@ export default defineEventHandler(async (event) => {
       day,
       month,
       year,
-      categoryId,
+      categoryId: categoryId || null,
       userId: user.userId
     },
     include: {

@@ -5,7 +5,7 @@ export function useValidation() {
     email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
     password: z
       .string()
-      .min(8, 'Senha deve ter no mínimo 8 caracteres')
+      .min(8, 'Senha deve ter pelo menos 8 caracteres')
       .regex(/[A-Z]/, 'Senha deve ter pelo menos 1 letra maiúscula')
       .regex(/[0-9]/, 'Senha deve ter pelo menos 1 número'),
     name: z.string().optional()
@@ -23,16 +23,32 @@ export function useValidation() {
     icon: z.string().max(50).optional().nullable()
   })
 
-  const transactionSchema = z.object({
+  const expenseSchema = z.object({
     name: z.string().min(3, 'Nome é obrigatório').max(100),
     price: z.number().positive('Valor deve ser positivo'),
     day: z.number().int().min(1).max(31),
     categoryId: z.string().min(1, 'Categoria é obrigatória')
   })
 
-  const occasionalTransactionSchema = transactionSchema.extend({
-    month: z.number().int().min(1).max(12),
-    year: z.number().int().min(2000).max(2100)
+  const occasionalExpenseSchema = z.object({
+    name: z.string().min(3, 'Nome é obrigatório').max(100),
+    price: z.number().positive('Valor deve ser positivo'),
+    date: z.string().min(1, 'Data é obrigatória'),
+    categoryId: z.string().min(1, 'Categoria é obrigatória')
+  })
+
+  const incomeSchema = z.object({
+    name: z.string().min(3, 'Nome é obrigatório').max(100),
+    price: z.number().positive('Valor deve ser positivo'),
+    day: z.number().int().min(1).max(31),
+    categoryId: z.string().optional().nullable()
+  })
+
+  const occasionalIncomeSchema = z.object({
+    name: z.string().min(3, 'Nome é obrigatório').max(100),
+    price: z.number().positive('Valor deve ser positivo'),
+    date: z.string().min(1, 'Data é obrigatória'),
+    categoryId: z.string().optional().nullable()
   })
 
   const wishlistSchema = z.object({
@@ -49,6 +65,28 @@ export function useValidation() {
     if (result.success) {
       return { success: true, data: result.data }
     }
+
+    const errors: Record<string, string> = {}
+    result.error.errors.forEach(err => {
+      const path = err.path.join('.')
+      errors[path] = err.message
+    })
+
+    return { success: false, errors }
+  }
+
+  return {
+    registerSchema,
+    loginSchema,
+    categorySchema,
+    expenseSchema,
+    occasionalExpenseSchema,
+    incomeSchema,
+    occasionalIncomeSchema,
+    wishlistSchema,
+    validate
+  }
+}
 
     const errors: Record<string, string> = {}
     result.error.errors.forEach(err => {

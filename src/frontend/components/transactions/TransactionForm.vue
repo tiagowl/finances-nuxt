@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { MonthlyExpense, MonthlyIncome, Category } from '~/types'
-import { useValidation } from '~/composables/useValidation'
 
 interface Props {
   show: boolean
@@ -18,12 +17,13 @@ const emit = defineEmits<{
   (e: 'submit', data: any): void
 }>()
 
-const { transactionSchema, occasionalTransactionSchema, validate } = useValidation()
+const { expenseSchema, occasionalExpenseSchema, incomeSchema, occasionalIncomeSchema, validate } = useValidation()
 
 const form = reactive({
   name: '',
   price: '',
   day: '',
+  date: '',
   categoryId: '',
   month: new Date().getMonth() + 1,
   year: new Date().getFullYear()
@@ -37,6 +37,7 @@ watch(() => props.show, (value) => {
     form.name = (props.initialData as any).name || ''
     form.price = (props.initialData as any).price?.toString() || ''
     form.day = (props.initialData as any).day?.toString() || ''
+    form.date = (props.initialData as any).date || ''
     form.categoryId = (props.initialData as any).categoryId || ''
     form.month = (props.initialData as any).month || new Date().getMonth() + 1
     form.year = (props.initialData as any).year || new Date().getFullYear()
@@ -49,6 +50,7 @@ function resetForm() {
   form.name = ''
   form.price = ''
   form.day = ''
+  form.date = new Date().toISOString().split('T')[0]
   form.categoryId = ''
   form.month = new Date().getMonth() + 1
   form.year = new Date().getFullYear()
@@ -58,17 +60,52 @@ function resetForm() {
 async function handleSubmit() {
   errors.value = {}
   
-  const data = {
-    name: form.name,
-    price: parseFloat(form.price),
-    day: parseInt(form.day),
-    categoryId: form.categoryId,
-    ...(props.transactionType === 'occasional' ? { month: form.month, year: form.year } : {})
-  }
+  let data: any
+  let schema: any
 
-  const schema = props.transactionType === 'occasional' 
-    ? occasionalTransactionSchema 
-    : transactionSchema
+  if (props.type === 'expense') {
+    if (props.transactionType === 'occasional') {
+      const parsedDate = new Date(form.date)
+      data = {
+        name: form.name,
+        price: parseFloat(form.price),
+        day: parsedDate.getDate(),
+        month: parsedDate.getMonth() + 1,
+        year: parsedDate.getFullYear(),
+        categoryId: form.categoryId
+      }
+      schema = occasionalExpenseSchema
+    } else {
+      data = {
+        name: form.name,
+        price: parseFloat(form.price),
+        day: parseInt(form.day),
+        categoryId: form.categoryId
+      }
+      schema = expenseSchema
+    }
+  } else {
+    if (props.transactionType === 'occasional') {
+      const parsedDate = new Date(form.date)
+      data = {
+        name: form.name,
+        price: parseFloat(form.price),
+        day: parsedDate.getDate(),
+        month: parsedDate.getMonth() + 1,
+        year: parsedDate.getFullYear(),
+        categoryId: form.categoryId || null
+      }
+      schema = occasionalIncomeSchema
+    } else {
+      data = {
+        name: form.name,
+        price: parseFloat(form.price),
+        day: parseInt(form.day),
+        categoryId: form.categoryId || null
+      }
+      schema = incomeSchema
+    }
+  }
   
   const result = validate(schema, data)
   
@@ -113,10 +150,11 @@ async function handleSubmit() {
         :options="categories.map(c => ({ value: c.id, label: c.name, color: c.color }))"
         placeholder="Selecione uma categoria"
         :error="errors.categoryId"
-        required
+        :required="type === 'expense'"
       />
-      
+
       <UiInput
+        v-if="transactionType === 'monthly'"
         v-model="form.day"
         label="Dia do vencimento/recebimento"
         type="number"
@@ -125,20 +163,14 @@ async function handleSubmit() {
         required
       />
 
-      <div v-if="transactionType === 'occasional'" class="flex gap-4">
-        <UiInput
-          v-model.number="form.month"
-          label="Mês"
-          type="number"
-          placeholder="1-12"
-        />
-        <UiInput
-          v-model.number="form.year"
-          label="Ano"
-          type="number"
-          placeholder="2024"
-        />
-      </div>
+      <UiInput
+        v-else
+        v-model="form.date"
+        label="Data"
+        type="date"
+        :error="errors.date"
+        required
+      />
 
       <div class="pt-4">
         <UiButton type="submit" :loading="loading" full>

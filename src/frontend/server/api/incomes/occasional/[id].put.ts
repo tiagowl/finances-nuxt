@@ -1,13 +1,13 @@
 import prisma from '~/server/utils/prisma'
 import { requireAuth } from '~/server/utils/jwt'
-import { occasionalTransactionSchema } from '~/server/utils/validation'
+import { occasionalIncomeSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = requireAuth(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
   
-  const result = occasionalTransactionSchema.safeParse(body)
+  const result = occasionalIncomeSchema.safeParse(body)
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -27,20 +27,31 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const category = await prisma.category.findFirst({
-    where: { id: result.data.categoryId, userId: user.userId }
-  })
+  const { name, price, day, month, year, categoryId } = result.data
 
-  if (!category) {
-    throw createError({
-      statusCode: 400,
-      message: 'Categoria não encontrada'
+  if (categoryId) {
+    const category = await prisma.category.findFirst({
+      where: { id: categoryId, userId: user.userId }
     })
+
+    if (!category) {
+      throw createError({
+        statusCode: 400,
+        message: 'Categoria não encontrada'
+      })
+    }
   }
 
   const income = await prisma.occasionalIncome.update({
     where: { id },
-    data: result.data,
+    data: {
+      name,
+      price,
+      day,
+      month,
+      year,
+      categoryId: categoryId || null
+    },
     include: {
       category: {
         select: {

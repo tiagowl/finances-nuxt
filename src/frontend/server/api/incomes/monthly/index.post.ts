@@ -1,12 +1,12 @@
 import prisma from '~/server/utils/prisma'
 import { requireAuth } from '~/server/utils/jwt'
-import { transactionSchema } from '~/server/utils/validation'
+import { incomeSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = requireAuth(event)
   const body = await readBody(event)
   
-  const result = transactionSchema.safeParse(body)
+  const result = incomeSchema.safeParse(body)
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -17,15 +17,17 @@ export default defineEventHandler(async (event) => {
 
   const { name, price, day, categoryId } = result.data
 
-  const category = await prisma.category.findFirst({
-    where: { id: categoryId, userId: user.userId }
-  })
-
-  if (!category) {
-    throw createError({
-      statusCode: 400,
-      message: 'Categoria não encontrada'
+  if (categoryId) {
+    const category = await prisma.category.findFirst({
+      where: { id: categoryId, userId: user.userId }
     })
+
+    if (!category) {
+      throw createError({
+        statusCode: 400,
+        message: 'Categoria não encontrada'
+      })
+    }
   }
 
   const income = await prisma.monthlyIncome.create({
@@ -33,7 +35,7 @@ export default defineEventHandler(async (event) => {
       name,
       price,
       day,
-      categoryId,
+      categoryId: categoryId || null,
       userId: user.userId
     },
     include: {

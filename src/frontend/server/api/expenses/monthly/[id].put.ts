@@ -1,13 +1,13 @@
 import prisma from '~/server/utils/prisma'
 import { requireAuth } from '~/server/utils/jwt'
-import { transactionSchema } from '~/server/utils/validation'
+import { expenseSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
   const user = requireAuth(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
   
-  const result = transactionSchema.safeParse(body)
+  const result = expenseSchema.safeParse(body)
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -27,8 +27,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const { name, price, day, categoryId } = result.data
+
   const category = await prisma.category.findFirst({
-    where: { id: result.data.categoryId, userId: user.userId }
+    where: { id: categoryId, userId: user.userId }
   })
 
   if (!category) {
@@ -40,7 +42,12 @@ export default defineEventHandler(async (event) => {
 
   const expense = await prisma.monthlyExpense.update({
     where: { id },
-    data: result.data,
+    data: {
+      name,
+      price,
+      day,
+      categoryId
+    },
     include: {
       category: {
         select: {
