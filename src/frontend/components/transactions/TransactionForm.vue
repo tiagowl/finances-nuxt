@@ -33,24 +33,31 @@ const errors = ref<Record<string, string>>({})
 const loading = ref(false)
 
 watch(() => props.show, (value) => {
-  if (value && props.initialData) {
-    form.name = (props.initialData as any).name || ''
-    form.price = (props.initialData as any).price?.toString() || ''
-    form.day = (props.initialData as any).day?.toString() || ''
-    form.date = (props.initialData as any).date || ''
-    form.categoryId = (props.initialData as any).categoryId || ''
-    form.month = (props.initialData as any).month || new Date().getMonth() + 1
-    form.year = (props.initialData as any).year || new Date().getFullYear()
-  } else if (value) {
-    resetForm()
+  if (value) {
+    if (props.initialData) {
+      form.name = (props.initialData as any).name || ''
+      form.price = (props.initialData as any).price?.toString() || ''
+      form.day = (props.initialData as any).day?.toString() || ''
+      form.date = (props.initialData as any).date || getTodayDate()
+      form.categoryId = (props.initialData as any).categoryId || ''
+      form.month = (props.initialData as any).month || new Date().getMonth() + 1
+      form.year = (props.initialData as any).year || new Date().getFullYear()
+    } else {
+      resetForm()
+    }
   }
 })
+
+function getTodayDate(): string {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
 
 function resetForm() {
   form.name = ''
   form.price = ''
   form.day = ''
-  form.date = new Date().toISOString().split('T')[0]
+  form.date = getTodayDate()
   form.categoryId = ''
   form.month = new Date().getMonth() + 1
   form.year = new Date().getFullYear()
@@ -60,9 +67,6 @@ function resetForm() {
 async function handleSubmit() {
   errors.value = {}
   
-  let data: any
-  let schema: any
-
   if (props.type === 'expense') {
     if (props.transactionType === 'occasional') {
       if (!form.date) {
@@ -74,23 +78,38 @@ async function handleSubmit() {
         errors.value.date = 'Data inválida'
         return
       }
-      data = {
+      if (!form.name || !form.price || !form.categoryId) {
+        if (!form.name) errors.value.name = 'Nome é obrigatório'
+        if (!form.price) errors.value.price = 'Valor é obrigatório'
+        if (!form.categoryId) errors.value.categoryId = 'Categoria é obrigatória'
+        return
+      }
+      emit('submit', {
         name: form.name,
         price: parseFloat(form.price),
         day: parsedDate.getDate(),
         month: parsedDate.getMonth() + 1,
         year: parsedDate.getFullYear(),
         categoryId: form.categoryId
-      }
-      schema = occasionalExpenseSchema
+      })
+      emit('close')
+      return
     } else {
-      data = {
+      if (!form.name || !form.price || !form.day || !form.categoryId) {
+        if (!form.name) errors.value.name = 'Nome é obrigatório'
+        if (!form.price) errors.value.price = 'Valor é obrigatório'
+        if (!form.day) errors.value.day = 'Dia é obrigatório'
+        if (!form.categoryId) errors.value.categoryId = 'Categoria é obrigatória'
+        return
+      }
+      emit('submit', {
         name: form.name,
         price: parseFloat(form.price),
         day: parseInt(form.day),
         categoryId: form.categoryId
-      }
-      schema = expenseSchema
+      })
+      emit('close')
+      return
     }
   } else {
     if (props.transactionType === 'occasional') {
@@ -103,39 +122,37 @@ async function handleSubmit() {
         errors.value.date = 'Data inválida'
         return
       }
-      data = {
+      if (!form.name || !form.price) {
+        if (!form.name) errors.value.name = 'Nome é obrigatório'
+        if (!form.price) errors.value.price = 'Valor é obrigatório'
+        return
+      }
+      emit('submit', {
         name: form.name,
         price: parseFloat(form.price),
         day: parsedDate.getDate(),
         month: parsedDate.getMonth() + 1,
         year: parsedDate.getFullYear(),
         categoryId: null
-      }
-      schema = occasionalIncomeSchema
+      })
+      emit('close')
+      return
     } else {
-      data = {
+      if (!form.name || !form.price || !form.day) {
+        if (!form.name) errors.value.name = 'Nome é obrigatório'
+        if (!form.price) errors.value.price = 'Valor é obrigatório'
+        if (!form.day) errors.value.day = 'Dia é obrigatório'
+        return
+      }
+      emit('submit', {
         name: form.name,
         price: parseFloat(form.price),
         day: parseInt(form.day),
         categoryId: null
-      }
-      schema = incomeSchema
+      })
+      emit('close')
+      return
     }
-  }
-  
-  const result = validate(schema, data)
-  
-  if (!result.success) {
-    errors.value = { ...errors.value, ...result.errors }
-    return
-  }
-
-  loading.value = true
-  try {
-    emit('submit', result.data)
-    emit('close')
-  } finally {
-    loading.value = false
   }
 }
 </script>
