@@ -3,52 +3,61 @@ import { requireAuth } from '~/server/utils/jwt'
 import { incomeSchema } from '~/server/utils/validation'
 
 export default defineEventHandler(async (event) => {
-  const user = requireAuth(event)
-  const body = await readBody(event)
-  
-  const result = incomeSchema.safeParse(body)
-  if (!result.success) {
-    throw createError({
-      statusCode: 400,
-      message: 'Dados inválidos',
-      data: result.error.flatten()
-    })
-  }
-
-  const { name, price, day, categoryId } = result.data
-
-  if (categoryId) {
-    const category = await prisma.category.findFirst({
-      where: { id: categoryId, userId: user.userId }
-    })
-
-    if (!category) {
+  try {
+    const user = requireAuth(event)
+    const body = await readBody(event)
+    
+    const result = incomeSchema.safeParse(body)
+    if (!result.success) {
       throw createError({
         statusCode: 400,
-        message: 'Categoria não encontrada'
+        message: 'Dados inválidos',
+        data: result.error.flatten()
       })
     }
-  }
 
-  const income = await prisma.monthlyIncome.create({
-    data: {
-      name,
-      price,
-      day,
-      categoryId: categoryId || null,
-      userId: user.userId
-    },
-    include: {
-      category: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          icon: true
-        }
+    const { name, price, day, categoryId } = result.data
+
+    if (categoryId) {
+      const category = await prisma.category.findFirst({
+        where: { id: categoryId, userId: user.userId }
+      })
+
+      if (!category) {
+        throw createError({
+          statusCode: 400,
+          message: 'Categoria não encontrada'
+        })
       }
     }
-  })
 
-  return { income }
+    const income = await prisma.monthlyIncome.create({
+      data: {
+        name,
+        price,
+        day,
+        categoryId: categoryId || null,
+        userId: user.userId
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            icon: true
+          }
+        }
+      }
+    })
+
+    return { income }
+  } catch (error: any) {
+    if (error.statusCode) throw error
+    console.error('Monthly income create error:', error)
+    throw createError({
+      statusCode: 500,
+      message: error.message || 'Erro interno do servidor'
+    })
+  }
 })
