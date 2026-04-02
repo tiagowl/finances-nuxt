@@ -87,23 +87,3 @@ export function useValidation() {
     validate
   }
 }
-
-    const errors: Record<string, string> = {}
-    result.error.errors.forEach(err => {
-      const path = err.path.join('.')
-      errors[path] = err.message
-    })
-
-    return { success: false, errors }
-  }
-
-  return {
-    registerSchema,
-    loginSchema,
-    categorySchema,
-    transactionSchema,
-    occasionalTransactionSchema,
-    wishlistSchema,
-    validate
-  }
-}
