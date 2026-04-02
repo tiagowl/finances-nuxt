@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories          Category[]
+  monthlyExpenses    MonthlyExpense[]
+  occasionalExpenses OccasionalExpense[]
+  monthlyIncomes     MonthlyIncome[]
+  occasionalIncomes  OccasionalIncome[]
+  wishlistItems      WishlistItem[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  budget    Float?
+  color     String?
+  icon      String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyExpenses   MonthlyExpense[]
+  occasionalExpenses OccasionalExpense[]
+  monthlyIncomes    MonthlyIncome[]
+  occasionalIncomes OccasionalIncome[]
+  wishlistItems    WishlistItem[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model MonthlyExpense {
+  id         String   @id @default(cuid())
+  name       String
+  price      Float
+  day        Int
+  categoryId String
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("monthly_expenses")
+}
+
+model OccasionalExpense {
+  id         String   @id @default(cuid())
+  name       String
+  price      Float
+  day        Int
+  month      Int
+  year       Int
+  categoryId String
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, month, year])
+  @@map("occasional_expenses")
+}
+
+model MonthlyIncome {
+  id         String   @id @default(cuid())
+  name       String
+  price      Float
+  day        Int
+  categoryId String
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("monthly_incomes")
+}
+
+model OccasionalIncome {
+  id         String   @id @default(cuid())
+  name       String
+  price      Float
+  day        Int
+  month      Int
+  year       Int
+  categoryId String
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, month, year])
+  @@map("occasional_incomes")
+}
+
+model WishlistItem {
+  id           String   @id @default(cuid())
+  name         String
+  price        Float
+  link         String?
+  isPurchased  Boolean  @default(false)
+  categoryId   String
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wishlist_items")
+}

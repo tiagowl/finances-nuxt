@@ -45,7 +45,41 @@ Como Product Owner, preciso que você:
 ### Para Análise de Requisitos
 ```
 Analise os seguintes requisitos e crie user stories detalhadas:
-[Inserir requisitos aqui]
+- sistema para gerenciamento de finanças pessoais;
+
+- funcionalidades de login e cadastro;
+
+- crud de Despesas mensais, com nome, preço, dia da despesa e categoria;
+
+- crud de Despesas avulsas, com nome, preco e dia da despesa;
+
+- crud de receitas mensais, com nome, preço, dia da despesa e categoria;
+
+- crud de receitas avulsas, com nome, preço, dia da despesa e categoria;
+
+- crud de categorias. Cada categoria terá nome e orçamento maximo de gasto;
+
+- no crud de Despesas e Receitas, vincular a uma categoria criada;
+
+- crud de lista de desejos, com nome, categoria, preço e link para compra;
+
+- sistema de cadastro e login;
+
+- na pagina de Despesas mensais, mostrar a estatística de total de gastos mensais;
+
+- na pagina de receitas mensais mostrar a estatistica de total de receitas mensais;
+
+- na pagina de categorias, mostrar total de gastos para cada categoria;
+
+- o sistema sera feito com nuxt 4, pinia e tailwind;
+
+- para interagir com o banco de dados sera usado a api routes do nuxt com prisma orm;
+
+- a prioridade de uso do sistema sera via navegador no celular;
+
+- fazer pequenas adaptações para visualização desktop;
+
+- o banco de dados sera o neon;
 
 Foque em:
 - Identificar personas
