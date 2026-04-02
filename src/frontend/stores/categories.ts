@@ -23,7 +23,9 @@ export const useCategoriesStore = defineStore('categories', {
         value: c.id,
         label: c.name,
         color: c.color,
-        icon: c.icon
+        icon: c.icon,
+        budget: c.budget,
+        totalSpent: c.totalSpent
       }))
     }
   },

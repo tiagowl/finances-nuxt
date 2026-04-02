@@ -65,7 +65,15 @@ async function handleSubmit() {
 
   if (props.type === 'expense') {
     if (props.transactionType === 'occasional') {
-      const parsedDate = new Date(form.date)
+      if (!form.date) {
+        errors.value.date = 'Data é obrigatória'
+        return
+      }
+      const parsedDate = new Date(form.date + 'T00:00:00')
+      if (isNaN(parsedDate.getTime())) {
+        errors.value.date = 'Data inválida'
+        return
+      }
       data = {
         name: form.name,
         price: parseFloat(form.price),
@@ -86,14 +94,22 @@ async function handleSubmit() {
     }
   } else {
     if (props.transactionType === 'occasional') {
-      const parsedDate = new Date(form.date)
+      if (!form.date) {
+        errors.value.date = 'Data é obrigatória'
+        return
+      }
+      const parsedDate = new Date(form.date + 'T00:00:00')
+      if (isNaN(parsedDate.getTime())) {
+        errors.value.date = 'Data inválida'
+        return
+      }
       data = {
         name: form.name,
         price: parseFloat(form.price),
         day: parsedDate.getDate(),
         month: parsedDate.getMonth() + 1,
         year: parsedDate.getFullYear(),
-        categoryId: form.categoryId || null
+        categoryId: null
       }
       schema = occasionalIncomeSchema
     } else {
@@ -101,7 +117,7 @@ async function handleSubmit() {
         name: form.name,
         price: parseFloat(form.price),
         day: parseInt(form.day),
-        categoryId: form.categoryId || null
+        categoryId: null
       }
       schema = incomeSchema
     }
@@ -110,7 +126,7 @@ async function handleSubmit() {
   const result = validate(schema, data)
   
   if (!result.success) {
-    errors.value = result.errors
+    errors.value = { ...errors.value, ...result.errors }
     return
   }
 
@@ -145,12 +161,20 @@ async function handleSubmit() {
       />
       
       <UiSelect
+        v-if="type === 'expense'"
         v-model="form.categoryId"
         label="Categoria"
-        :options="categories.map(c => ({ value: c.id, label: c.name, color: c.color }))"
+        :options="categories.map(c => ({ 
+          value: c.id, 
+          label: c.name, 
+          color: c.color,
+          budget: c.budget,
+          totalSpent: c.totalSpent
+        }))"
         placeholder="Selecione uma categoria"
         :error="errors.categoryId"
-        :required="type === 'expense'"
+        :required="true"
+        :show-budget="true"
       />
 
       <UiInput
