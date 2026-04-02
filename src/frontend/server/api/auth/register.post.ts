@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
     
     const result = registerSchema.safeParse(body)
     if (!result.success) {
+      const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
       throw createError({
         statusCode: 400,
-        message: 'Dados inválidos',
-        data: result.error.flatten()
+        message: errors || 'Dados inválidos'
       })
     }
 
