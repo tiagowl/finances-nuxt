@@ -32,7 +32,6 @@ export default defineNuxtConfig({
     refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
     refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
     public: {
-      appUrl: process.env.NUXT_PUBLIC_APP_URL,
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Finances Nuxt',
       testUserEmail: process.env.TEST_USER_EMAIL || 'teste@finances.com',
       testUserPassword: process.env.TEST_USER_PASSWORD || 'Teste123'

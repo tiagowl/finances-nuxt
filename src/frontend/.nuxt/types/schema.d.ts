@@ -24,8 +24,6 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
    },
   }
   interface SharedPublicRuntimeConfig {
-   appUrl: string,
-
    appName: string,
 
    testUserEmail: string,

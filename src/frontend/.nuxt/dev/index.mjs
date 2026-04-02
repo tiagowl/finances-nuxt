@@ -662,7 +662,6 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "appUrl": "http://localhost:3000",
     "appName": "Finances Nuxt",
     "testUserEmail": "teste@finances.com",
     "testUserPassword": "Teste123"
